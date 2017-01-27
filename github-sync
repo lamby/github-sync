@@ -20,16 +20,20 @@
 import os
 import sys
 import logging
+import eventlet
 import requests
 import subprocess
 
 from xdg import BaseDirectory
+from eventlet import wsgi
 from configparser import SafeConfigParser
 
 
 class GithubSync(object):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.pool = eventlet.GreenPool(2)
 
         self.load_config()
         self.setup_logging()
@@ -57,12 +61,44 @@ class GithubSync(object):
         self.log.addHandler(handler)
 
     def main(self):
-        for x in self.config.sections():
-            if x == 'MAIN':
-                continue
-            self.sync_project(x)
+        self.start_server()
+
+        try:
+            self.pool.waitall()
+        except (SystemExit, KeyboardInterrupt):
+            pass
 
         return 0
+
+    def start_server(self):
+        wsgi_socket = eventlet.listen((
+            self.config['MAIN']['ListenAddress'],
+            self.config['MAIN'].getint('ListenPort'),
+        ))
+
+        self.pool.spawn_n(wsgi.server, wsgi_socket, self.handle_wsgi)
+
+    def handle_wsgi(self, env, start_response):
+        if env['REQUEST_METHOD'] != 'POST':
+            start_response("405 Method Not Allowed", [])
+            return []
+
+        if env['PATH_INFO'] == '/':
+            for x in self.config.sections():
+                if x == 'MAIN':
+                    continue
+                self.pool.spawn_n(self.sync_project, x)
+        else:
+            x = env['PATH_INFO'][1:]
+
+            if x not in self.config:
+                start_response("404 File Not Found", [])
+                return []
+
+            self.pool.spawn_n(self.sync_project, x)
+
+        start_response("202 Accepted", [])
+        return []
 
     def sync_project(self, name):
         self.log.info("Syncing %s", name)
