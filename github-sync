@@ -32,19 +32,12 @@ eventlet.monkey_patch()
 
 
 class GithubSync(object):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+    def __init__(self):
         self.pool = eventlet.GreenPool(1000)
 
-        self.load_config()
-        self.setup_logging()
-
-    def load_config(self):
+    def load_config(self, config_file):
         self.config = SafeConfigParser()
-        self.config.read(
-            os.path.join(xdg.XDG_CONFIG_HOME, 'github-sync.ini')
-        )
+        self.config.read(config_file)
 
         assert 'General' in self.config
 
@@ -62,7 +55,9 @@ class GithubSync(object):
         )
         self.log.addHandler(handler)
 
-    def main(self):
+    def main(self, config_file):
+        self.load_config(config_file)
+        self.setup_logging()
         self.start_server()
 
         try:
@@ -131,7 +126,7 @@ class GithubSync(object):
 
             r.raise_for_status()
 
-        cwd = os.path.join(xdg.XDG_CACHE_HOME, 'github-sync', name)
+        cwd = os.path.join(self.config['General']['CacheDir'], name)
         repo = r.json()
 
         def git(*args, **kwargs):
@@ -158,6 +153,6 @@ class GithubSync(object):
 
 if __name__ == '__main__':
     try:
-        sys.exit(GithubSync().main())
+        sys.exit(GithubSync().main(sys.argv[1:]))
     except KeyboardInterrupt:
         sys.exit(2)
