@@ -30,7 +30,7 @@ from configparser import SafeConfigParser
 class GithubSync(object):
     def __init__(self):
         self.pool = eventlet.GreenPool(1000)
-        self.projects = collections.OrderedDict()
+        self.projects = []
 
     def setup_logging(self):
         self.log = logging.getLogger()
@@ -110,14 +110,14 @@ class GithubSync(object):
         start_response("202 Accepted", [])
         return []
 
-    def sync_project(self, name):
-        self.log.info("Syncing %s", name)
+    def sync_project(self, path):
+        self.log.info("Syncing %s", path)
 
-        project = self.config[name]
-        org, repo_name = name.split('/', 2)
+        project = self.config[path]
+        org, name = path.split('/', 2)
 
         data = {
-            'name': repo_name,
+            'name': name,
             'homepage': project['homepage'],
             'description': "Official mirror of {}".format(project['source']),
             'has_issues': False,
@@ -127,7 +127,7 @@ class GithubSync(object):
 
         self.log.debug("Updating metadata")
         r = requests.patch(
-            'https://api.github.com/repos/{}'.format(name),
+            'https://api.github.com/repos/{}'.format(path),
             json=data,
             headers=self.get_headers(),
         )
@@ -142,7 +142,7 @@ class GithubSync(object):
 
             r.raise_for_status()
 
-        cwd = os.path.join(self.config['General']['CacheDir'], name)
+        cwd = os.path.join(self.config['General']['CacheDir'], path)
         repo = r.json()
 
         def git(*args, **kwargs):
