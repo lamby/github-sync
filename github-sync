@@ -19,7 +19,6 @@
 
 import os
 import sys
-import xdg
 import logging
 import eventlet
 import requests
@@ -28,26 +27,15 @@ import subprocess
 from eventlet import wsgi
 from configparser import SafeConfigParser
 
-eventlet.monkey_patch()
-
-
 class GithubSync(object):
     def __init__(self):
         self.pool = eventlet.GreenPool(1000)
 
-    def load_config(self, config_file):
-        self.config = SafeConfigParser()
-        self.config.read(config_file)
-
-        assert 'General' in self.config
-
     def setup_logging(self):
         self.log = logging.getLogger()
-        self.log.setLevel({
-            0: logging.WARNING,
-            1: logging.INFO,
-            2: logging.DEBUG,
-        }[1])
+
+        if 'GITHUB_SYNC_DEBUG' in os.environ:
+            self.log.setLevel(logging.DEBUG)
 
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
@@ -55,10 +43,28 @@ class GithubSync(object):
         )
         self.log.addHandler(handler)
 
+    def load_config(self, config_file):
+        self.log.info("Loading configuration from %s", config_file)
+        self.config = SafeConfigParser()
+        self.config.read(config_file)
+
+        if 'General' not in self.config:
+            raise ValueError("No valid configuration file specified")
+
+        self.log.debug(
+            "Loaded configuration: %d project(s)",
+            len(self.config.sections()) - 1,
+        )
+
     def main(self, config_file):
-        self.load_config(config_file)
         self.setup_logging()
+
+        eventlet.monkey_patch()
+
+        self.load_config(config_file)
         self.start_server()
+
+        self.log.info("Server ready")
 
         try:
             self.pool.waitall()
@@ -153,6 +159,6 @@ class GithubSync(object):
 
 if __name__ == '__main__':
     try:
-        sys.exit(GithubSync().main(sys.argv[1:]))
+        sys.exit(GithubSync().main(*sys.argv[1:]))
     except KeyboardInterrupt:
         sys.exit(2)

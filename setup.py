@@ -10,4 +10,8 @@ setup(
     scripts=(
         'github-sync',
     ),
+    install_requires=(
+        'eventlet',
+        'requests',
+    ),
 )

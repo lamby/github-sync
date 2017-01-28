@@ -5,16 +5,18 @@ Maintainer: Chris Lamb <lamby@debian.org>
 Build-Depends:
  debhelper (>= 9),
  dh-systemd,
- dh-virtualenv (>= 0.10),
- python,
- python-dev
+ python3,
+ python3-setuptools,
 Standards-Version: 3.9.8
 
 Package: github-sync
 Architecture: any
 Pre-Depends:
  python3,
- ${misc:Pre-Depends}
+ python3-eventlet,
+ python3-requests,
+ python3-xdg,
 Depends:
- ${misc:Depends}
+ ${misc:Depends},
+ ${python3:Depends},
 Description: Tool for mirroring non-Github repos on Github
