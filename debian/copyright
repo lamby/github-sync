@@ -1,5 +1,10 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Contact: Chris Lamb <chris@chris-lamb.co.uk>
+Upstream-Name: github-sync
+Source: https://chris-lamb.co.uk/projects/github-sync
+
 Files: *
-Copyright: © 2015 Chris Lamb <chris@chris-lamb.co.uk>
+Copyright: © 2017 Chris Lamb <chris@chris-lamb.co.uk>
 License: GPL-3+
 
 License: GPL-3+
