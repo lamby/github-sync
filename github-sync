@@ -30,6 +30,7 @@ from configparser import SafeConfigParser
 class GithubSync(object):
     def __init__(self):
         self.pool = eventlet.GreenPool(1000)
+        self.projects = collections.OrderedDict()
 
     def setup_logging(self):
         self.log = logging.getLogger()
@@ -51,10 +52,9 @@ class GithubSync(object):
         if 'General' not in self.config:
             raise ValueError("No valid configuration file specified")
 
-        self.log.debug(
-            "Loaded configuration: %d project(s)",
-            len(self.config.sections()) - 1,
-        )
+        self.projects = [x for x in self.config.sections() if '/' in x]
+
+        self.log.debug("Loaded %d project(s)", len(self.projects))
 
     def main(self, config_file):
         self.setup_logging()
@@ -92,14 +92,13 @@ class GithubSync(object):
 
     def handle_POST(self, env, start_response):
         if env['PATH_INFO'] == '/':
-            for x in self.config.sections():
-                if '/' in x:
-                    self.pool.spawn_n(self.sync_project, x)
+            for x in self.projects:
+                self.pool.spawn_n(self.sync_project, x)
         else:
             x = env['PATH_INFO'][1:]
-            if x not in self.config:
+            if x not in self.projects:
                 start_response("404 File Not Found", [])
-                return []
+                return ["Project not found"]
             self.pool.spawn_n(self.sync_project, x)
 
         start_response("202 Accepted", [])
