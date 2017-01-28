@@ -7,7 +7,7 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/github-sync /etc/github-sync/github-sync.ini
+ExecStart=/usr/bin/github-sync /etc/github-sync/github-sync.cfg
 Restart=always
 User=nobody
 Group=nogroup
