@@ -1,0 +1,23 @@
+[Unit]
+After=network.target
+Description=Tool for mirroring non-Github repos on Github.
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/github-sync
+Restart=always
+User=nobody
+Group=nogroup
+RestartSec=15
+StartLimitInterval=0
+
+PrivateTmp=yes
+PrivateDevices=yes
+LimitNPROC=1
+LimitFSIZE=0
+ProtectHome=yes
+ProtectSystem=full
+ReadOnlyDirectories=/
