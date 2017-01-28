@@ -1,6 +1,5 @@
 github-sync (0) UNRELEASED; urgency=low
 
   * Initial version.
-  * wrap-and-sort -sa.
 
- -- Chris Lamb <lamby@debian.org>  Wed, 02 Sep 2015 17:27:12 +0100
+ -- Chris Lamb <lamby@debian.org>  Sun, 29 Jan 2017 12:38:07 +1300
