@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-    name='tickle-me-email',
-    version='3.5.7',
-    url='https://chris-lamb.co.uk/projects/tickle-me-email',
-    author='Chris Lamb',
+    name='github-sync',
+    version='0.0.1',
+    url='https://chris-lamb.co.uk/projects/github-sync',
+    author="Chris Lamb",
     author_email='chris@chris-lamb.co.uk',
-    description='Toolbox for implementing GTD-like behaviours in your IMAP inbox',
+    description="Tool for mirroring non-Github repos on Github. WIP.",
     scripts=(
-        'tickle-me-email',
+        'github-sync',
     ),
 )
