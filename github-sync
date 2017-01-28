@@ -46,7 +46,7 @@ class GithubSync(object):
             os.path.join(xdg.XDG_CONFIG_HOME, 'github-sync.ini')
         )
 
-        assert 'MAIN' in self.config
+        assert 'General' in self.config
 
     def setup_logging(self):
         self.log = logging.getLogger()
@@ -74,8 +74,8 @@ class GithubSync(object):
 
     def start_server(self):
         wsgi_socket = eventlet.listen((
-            self.config['MAIN']['ListenAddress'],
-            self.config['MAIN'].getint('ListenPort'),
+            self.config['General']['ListenAddress'],
+            self.config['General'].getint('ListenPort'),
         ))
 
         self.pool.spawn_n(wsgi.server, wsgi_socket, self.handle_wsgi)
@@ -87,9 +87,8 @@ class GithubSync(object):
 
         if env['PATH_INFO'] == '/':
             for x in self.config.sections():
-                if x == 'MAIN':
-                    continue
-                self.pool.spawn_n(self.sync_project, x)
+                if '/' in x:
+                    self.pool.spawn_n(self.sync_project, x)
         else:
             x = env['PATH_INFO'][1:]
             if x not in self.config:
@@ -103,11 +102,11 @@ class GithubSync(object):
     def sync_project(self, name):
         self.log.info("Syncing %s", name)
 
-        org = self.config['MAIN']['Organisation']
         project = self.config[name]
+        org, repo_name = name.split('/', 2)
 
         data = {
-            'name': name,
+            'name': repo_name,
             'homepage': project['homepage'],
             'description': "Official mirror of {}".format(project['source']),
             'has_issues': False,
@@ -115,13 +114,15 @@ class GithubSync(object):
             'has_downloads': False,
         }
 
+        self.log.debug("Updating metadata")
         r = requests.patch(
-            'https://api.github.com/repos/{}/{}'.format(org, name),
+            'https://api.github.com/repos/{}'.format(name),
             json=data,
             headers=self.get_headers(),
         )
 
         if r.status_code != 200:
+            self.log.info("Creating repo")
             r = requests.post(
                 'https://api.github.com/orgs/{}/repos'.format(org),
                 json=data,
@@ -140,20 +141,23 @@ class GithubSync(object):
             self.log.debug("git %s", ' '.join(args))
             return subprocess.check_call(**kwargs)
 
-        if os.path.exists(cwd):
-            git('fetch')
-        else:
-            git('clone', project['source'], cwd, cwd=None)
+        if not os.path.exists(cwd):
+            git('clone', '--mirror', project['source'], cwd, cwd=None)
+            git('remote', 'add', 'github', repo['ssh_url'])
 
-        git('remote', 'set-url', 'origin', repo['ssh_url'])
-        git('push', '--all')
-        git('push', '--tags')
+        git('fetch', 'origin', '--prune')
+
+        git('remote', 'set-url', 'github', repo['ssh_url'])
+        git('push', 'github', '--force')
 
     def get_headers(self):
         return {
             'Accept': 'application/vnd.github.inertia-preview+json',
-            'Authorization': 'token %s' % self.config['MAIN']['Token']
+            'Authorization': 'token %s' % self.config['General']['GithubToken']
         }
 
 if __name__ == '__main__':
-    sys.exit(GithubSync().main())
+    try:
+        sys.exit(GithubSync().main())
+    except KeyboardInterrupt:
+        sys.exit(2)
