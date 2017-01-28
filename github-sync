@@ -82,10 +82,15 @@ class GithubSync(object):
         self.pool.spawn_n(wsgi.server, wsgi_socket, self.handle_wsgi)
 
     def handle_wsgi(self, env, start_response):
-        if env['REQUEST_METHOD'] != 'POST':
+        try:
+            fn = getattr(self, 'handle_{}'.format(env['REQUEST_METHOD']))
+        except AttributeError:
             start_response("405 Method Not Allowed", [])
             return []
+        else:
+            return fn(env, start_response)
 
+    def handle_POST(self, env, start_response):
         if env['PATH_INFO'] == '/':
             for x in self.config.sections():
                 if '/' in x:
