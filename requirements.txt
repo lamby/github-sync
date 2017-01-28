@@ -1,0 +1,4 @@
+eventlet==0.18.3
+greenlet==0.4.9
+requests==2.9.1
+xdg==1.0.3

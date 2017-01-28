@@ -19,12 +19,12 @@
 
 import os
 import sys
+import xdg
 import logging
 import eventlet
 import requests
 import subprocess
 
-from xdg import BaseDirectory
 from eventlet import wsgi
 from configparser import SafeConfigParser
 
@@ -43,7 +43,7 @@ class GithubSync(object):
     def load_config(self):
         self.config = SafeConfigParser()
         self.config.read(
-            os.path.join(BaseDirectory.xdg_config_home, 'github-sync.ini')
+            os.path.join(xdg.XDG_CONFIG_HOME, 'github-sync.ini')
         )
 
         assert 'MAIN' in self.config
@@ -130,7 +130,7 @@ class GithubSync(object):
 
             r.raise_for_status()
 
-        cwd = os.path.join(BaseDirectory.xdg_cache_home, 'github-sync', name)
+        cwd = os.path.join(xdg.XDG_CACHE_HOME, 'github-sync', name)
         repo = r.json()
 
         def git(*args, **kwargs):
