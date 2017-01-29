@@ -159,7 +159,7 @@ class GithubSync(object):
         git('fetch', 'origin', '--prune')
 
         git('remote', 'set-url', 'github', repo['ssh_url'])
-        git('push', 'github', '--force')
+        git('push', 'github', '--force', '--mirror')
 
     def get_headers(self):
         return {
