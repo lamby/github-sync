@@ -16,8 +16,6 @@ StartLimitInterval=0
 
 PrivateTmp=yes
 PrivateDevices=yes
-LimitNPROC=1
-LimitFSIZE=0
 ProtectHome=yes
 ProtectSystem=full
 ReadOnlyDirectories=/
