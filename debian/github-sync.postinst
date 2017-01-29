@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+DIR="/var/lib/github-sync"
+USER="github-sync"
+
+case "${1}" in
+	configure)
+		adduser \
+			--system \
+			--home ${DIR} \
+			--quiet \
+			--group \
+			${USER} || true
+
+		mkdir -p ${DIR}
+		chown -R ${USER}:${USER} ${DIR}
+		;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+		;;
+
+	*)
+		echo "postinst called with unknown argument \`${1}'" >&2
+		exit 1
+		;;
+esac
+
+#DEBHELPER#
+
+exit 0

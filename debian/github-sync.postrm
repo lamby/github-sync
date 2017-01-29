@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+DIR="/var/lib/github-sync"
+USER="github-sync"
+
+if [ "${1}" = "purge" ]
+then
+	userdel ${USER} || true
+	rm -rf ${DIR}
+fi
+
+#DEBHELPER#
