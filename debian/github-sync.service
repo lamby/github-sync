@@ -9,8 +9,8 @@ WantedBy=multi-user.target
 Type=simple
 ExecStart=/usr/bin/github-sync /etc/github-sync/github-sync.cfg
 Restart=always
-User=nobody
-Group=nogroup
+User=github-sync
+Group=github-sync
 RestartSec=15
 StartLimitInterval=0
 
@@ -21,3 +21,4 @@ LimitFSIZE=0
 ProtectHome=yes
 ProtectSystem=full
 ReadOnlyDirectories=/
+ReadWriteDirectories=-/var/lib/github-sync
